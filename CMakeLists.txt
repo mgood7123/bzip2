@@ -18,6 +18,8 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
+# we only want the library
+
 cmake_minimum_required (VERSION 3.1)
 project (bzip2 C)
 
@@ -44,8 +46,6 @@ include (CPack)
 include (CTest)
 include (GNUInstallDirs)
 
-set (CMAKE_DEBUG_POSTFIX d)
-
 add_library (libz2
   blocksort.c
   bzlib.c
@@ -58,99 +58,13 @@ add_library (libz2
   randtable.c
 )
 
-if (BUILD_SHARED_LIBS)
-  if (WIN32)
-    target_sources (libz2 PRIVATE libbz2.def)
-  endif (WIN32)
-endif (BUILD_SHARED_LIBS)
-
-add_library (BZip2::BZip2 ALIAS libz2)
-
-add_executable (bzip2
-  bzip2.c
-)
-
-target_link_libraries (bzip2 PRIVATE BZip2::BZip2)
-
-add_executable (bzip2recover
-  bzip2recover.c
-)
-
-target_link_libraries (bzip2recover PRIVATE BZip2::BZip2)
-
-set_target_properties (libz2 PROPERTIES EXPORT_NAME BZip2::BZip2)
-set_target_properties (libz2 PROPERTIES OUTPUT_NAME bz2)
 set_target_properties (libz2 PROPERTIES PUBLIC_HEADER bzlib.h)
-set_target_properties (libz2 PROPERTIES SOVERSION ${VERSION})
 set_target_properties (libz2 PROPERTIES VERSION ${MAJOR_VERSION})
 
-install (TARGETS libz2 bzip2 bzip2recover
-  EXPORT bzip2-targets
-  PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR} COMPONENT Development
-  RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT Runtime
-  LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT Development
-  ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT Development)
+target_link_libraries(libz2 STATIC)
 
 configure_package_config_file (bzip2-config.cmake.in
   ${CMAKE_CURRENT_BINARY_DIR}/bzip2-config.cmake
   INSTALL_DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake)
 write_basic_package_version_file (bzip2-config-version.cmake
   VERSION ${VERSION} COMPATIBILITY SameMajorVersion)
-
-export (TARGETS libz2 NAMESPACE BZip2:: FILE bzip2-targets.cmake)
-export (PACKAGE bzip2)
-
-install (EXPORT bzip2-targets NAMESPACE BZip2::
-  DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake)
-
-install (FILES bzip2.1 bzgrep.1 bzmore.1 bzdiff.1
-  DESTINATION ${CMAKE_INSTALL_MANDIR}/man1
-  COMPONENT Runtime)
-
-install (PROGRAMS $<TARGET_FILE:bzip2>
-  DESTINATION ${CMAKE_INSTALL_BINDIR}
-  COMPONENT Runtime
-  RENAME bunzip2${CMAKE_EXECUTABLE_SUFFIX}
-)
-
-install (PROGRAMS $<TARGET_FILE:bzip2>
-  DESTINATION ${CMAKE_INSTALL_BINDIR}
-  COMPONENT Runtime
-  RENAME bzcat${CMAKE_EXECUTABLE_SUFFIX}
-)
-
-install (PROGRAMS bzdiff bzgrep bzmore
-  DESTINATION ${CMAKE_INSTALL_BINDIR}
-  COMPONENT Runtime
-)
-
-install (FILES LICENSE DESTINATION
-  ${CMAKE_INSTALL_DATAROOTDIR}/licenses/bzip2
-  COMPONENT Runtime)
-
-if (WIN32)
-  set (_COMPARE fc)
-else (WIN32)
-  set (_COMPARE cmp)
-endif (WIN32)
-
-add_test (NAME sample1 COMMAND ${CMAKE_COMMAND}
-  -DCOMPARE=${_COMPARE}
-  -DEXECUTABLE=$<TARGET_FILE:bzip2> -DARGS=-1
-  -DIN=${CMAKE_CURRENT_SOURCE_DIR}/sample1.ref
-  -DOUT=${CMAKE_CURRENT_SOURCE_DIR}/sample1.bz2
-  -P ${CMAKE_CURRENT_SOURCE_DIR}/cmake/runtest.cmake)
-
-add_test (NAME sample2 COMMAND ${CMAKE_COMMAND}
-  -DCOMPARE=${_COMPARE}
-  -DEXECUTABLE=$<TARGET_FILE:bzip2> -DARGS=-2
-  -DIN=${CMAKE_CURRENT_SOURCE_DIR}/sample2.ref
-  -DOUT=${CMAKE_CURRENT_SOURCE_DIR}/sample2.bz2
-  -P ${CMAKE_CURRENT_SOURCE_DIR}/cmake/runtest.cmake)
-
-add_test (NAME sample3 COMMAND ${CMAKE_COMMAND}
-  -DCOMPARE=${_COMPARE}
-  -DEXECUTABLE=$<TARGET_FILE:bzip2> -DARGS=-3
-  -DIN=${CMAKE_CURRENT_SOURCE_DIR}/sample3.ref
-  -DOUT=${CMAKE_CURRENT_SOURCE_DIR}/sample3.bz2
-  -P ${CMAKE_CURRENT_SOURCE_DIR}/cmake/runtest.cmake)
