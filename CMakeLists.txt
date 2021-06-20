@@ -34,7 +34,7 @@ set (CPACK_COMPONENT_LIBRARIES_GROUP Development)
 set (CPACK_COMPONENT_HEADERS_GROUP Development)
 set (CPACK_PACKAGE_NAME bzip2)
 set (CPACK_PACKAGE_DESCRIPTION_SUMMARY
-  "A high-quality data compression program")
+        "A high-quality data compression program")
 set (CPACK_PACKAGE_VERSION_MAJOR ${MAJOR_VERSION})
 set (CPACK_PACKAGE_VERSION_MINOR ${MINOR_VERSION})
 set (CPACK_PACKAGE_VERSION_PATCH ${VERSION_PATCH})
@@ -46,25 +46,30 @@ include (CPack)
 include (CTest)
 include (GNUInstallDirs)
 
-add_library (libz2
-  blocksort.c
-  bzlib.c
-  bzlib.h
-  bzlib_private.h
-  compress.c
-  crctable.c
-  decompress.c
-  huffman.c
-  randtable.c
-)
+add_library (bz2 SHARED
+        blocksort.c
+        bzlib.c
+        bzlib.h
+        bzlib_private.h
+        compress.c
+        crctable.c
+        decompress.c
+        huffman.c
+        randtable.c
+        )
 
-set_target_properties (libz2 PROPERTIES PUBLIC_HEADER bzlib.h)
-set_target_properties (libz2 PROPERTIES VERSION ${MAJOR_VERSION})
+if (WIN32)
+  target_sources (bz2 PRIVATE libbz2.def)
+endif (WIN32)
 
-target_link_libraries(libz2 STATIC)
+set_target_properties (bz2 PROPERTIES PUBLIC_HEADER bzlib.h)
+set_target_properties (bz2 PROPERTIES SOVERSION ${VERSION})
+set_target_properties (bz2 PROPERTIES VERSION ${MAJOR_VERSION})
+
+target_link_libraries(bz2)
 
 configure_package_config_file (bzip2-config.cmake.in
-  ${CMAKE_CURRENT_BINARY_DIR}/bzip2-config.cmake
-  INSTALL_DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake)
+        ${CMAKE_CURRENT_BINARY_DIR}/bzip2-config.cmake
+        INSTALL_DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake)
 write_basic_package_version_file (bzip2-config-version.cmake
-  VERSION ${VERSION} COMPATIBILITY SameMajorVersion)
+        VERSION ${VERSION} COMPATIBILITY SameMajorVersion)
